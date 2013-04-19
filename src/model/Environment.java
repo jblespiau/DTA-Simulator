@@ -14,7 +14,7 @@ public class Environment {
 		Environment.delta_t = delta_t;
 	}
 	
-	public static int getNb() {
+	static int getNb() {
 		nb_cell++;
 		return nb_cell;
 	}

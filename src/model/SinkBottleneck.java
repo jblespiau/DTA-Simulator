@@ -18,9 +18,4 @@ public class SinkBottleneck extends Sink {
 	public String printNetwork(int step) {
 		return "[BottleneckSink: " + bottleneck_capacity + "]";
 	}
-	
-	@Override
-	public String getCell() {
-		return "[BottleneckSink: " + bottleneck_capacity + "]";
-	}
 }

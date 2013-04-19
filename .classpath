@@ -2,6 +2,15 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="lib/jheatchart-0.6.jar"/>
+	<classpathentry kind="lib" path="lib/JFreeChart/gnujaxp.jar"/>
+	<classpathentry kind="lib" path="lib/JFreeChart/iText-2.1.5.jar"/>
+	<classpathentry kind="lib" path="lib/JFreeChart/jcommon-1.0.17.jar"/>
+	<classpathentry kind="lib" path="lib/JFreeChart/jfreechart-1.0.14-experimental.jar"/>
+	<classpathentry kind="lib" path="lib/JFreeChart/jfreechart-1.0.14-swt.jar"/>
+	<classpathentry kind="lib" path="lib/JFreeChart/jfreechart-1.0.14.jar"/>
+	<classpathentry kind="lib" path="lib/JFreeChart/junit.jar"/>
+	<classpathentry kind="lib" path="lib/JFreeChart/servlet.jar"/>
+	<classpathentry kind="lib" path="lib/JFreeChart/swtgraphics2d.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

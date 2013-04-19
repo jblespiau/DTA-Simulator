@@ -2,11 +2,16 @@ package model;
 
 import java.util.Iterator;
 
+/**
+ * @class Solver
+ * @brief Contains the useful functions that can be applied to the network
+ *
+ */
 public class Solver {
 
-	/* To be able to compute all cells must satisfy:
-	 * v <= l / delta_t
-	 *  <= l / delta_t;
+	/**
+	 * @brief Checks the Courant–Friedrichs–Lewy conditions necessary to
+	 * ensure the numerical computation is correct.
 	 */
 	public static void checkConstraints (Origin O) {
 		Iterator<EntryCell> i = O.getIterator();
@@ -18,6 +23,7 @@ public class Solver {
 	}
 
 	/* For full information about the network */
+	/*
 	public static void DFS(Origin O) {
 		Iterator<EntryCell> i = O.getIterator();
 		
@@ -37,7 +43,7 @@ public class Solver {
 		System.out.print("--->" + C.getCell());
 		DFS(C.getNext());
 
-	}
+	} */
 	
 	/* Simple and clearer details of the network */
 	public static void printNetwork(Origin O, int step) {
@@ -60,6 +66,6 @@ public class Solver {
 		printNetwork(C.getNext(), step);
 
 	}
-	
+
 
 }

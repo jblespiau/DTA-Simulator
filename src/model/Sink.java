@@ -1,11 +1,7 @@
 package model;
 
-public class Sink extends Cell {
+public class Sink implements Cell {
 
-	public String getCell() {
-		return "[Sink]";
-	}
-	
 	@Override
 	public String printNetwork(int step) {
 		return "[Sink]";
