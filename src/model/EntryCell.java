@@ -3,14 +3,14 @@ package model;
 /**
  * @class EntryCell
  * @brief An EntryCell contains a buffer and an OrdinaryCell. The buffer holds
- *        the cars wanting to go to the cell but which can't because of the limited
- *        in-flow
+ *        the cars wanting to go to the cell but which can't because of the
+ *        limited in-flow
  * 
  */
 public class EntryCell implements Cell, PlottableCell {
 
 	public RoadChunk c;
-	private double[] buffer = new double[Environment.getNb_steps() + 1];
+	double[] buffer = new double[Discretization.getNb_steps() + 1];
 
 	public EntryCell(RoadChunk c) {
 		this.c = c;
@@ -52,14 +52,16 @@ public class EntryCell implements Cell, PlottableCell {
 	// At time t we add the flow in buffer[t] than will then be emptied
 	@Override
 	public void transfer(double nb_cars, int step) {
-		//double delta_t = Environment.getDelta_t();
-		buffer[step] += nb_cars ;
+		if (step == 0)
+			buffer[step] = nb_cars;
+		else
+			buffer[step] = buffer[step - 1] + nb_cars;
 	}
 
 	/* In the case of an EntryCell, we just have to compute the flow_in */
 	@Override
 	public void runDynamic(int step) {
-		double delta_t = Environment.getDelta_t();
+		double delta_t = Discretization.getDelta_t();
 		double demand = buffer[step] / delta_t;
 		assert demand >= 0 : "the demand should be positive";
 		/* We ask for the supply of the outgoing link */
@@ -88,7 +90,7 @@ public class EntryCell implements Cell, PlottableCell {
 		assert buffer[0] >= 0 : "the initial buffer size should be greater than 0";
 		c.checkConstraints();
 	}
-	
+
 	@Override
 	public double[] cumulativeDensity(int to_step) {
 		return c.cumulativeDensity(to_step);

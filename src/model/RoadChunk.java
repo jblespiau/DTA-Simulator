@@ -1,5 +1,6 @@
 package model;
 
+
 /**
  * @class OrdinaryCell
  * @brief An OrdinaryCell represent a chunk of road that can be defined with a
@@ -14,14 +15,14 @@ public class RoadChunk implements Cell, PlottableCell {
 	private int identifier;
 
 	/* Variables */
-	public double[] flow_in = new double[Environment.getNb_steps() + 1];
-	public double[] flow_out = new double[Environment.getNb_steps() + 1];
-	public double[] density = new double[Environment.getNb_steps() + 1];
+	public double[] flow_in = new double[Discretization.getNb_steps() + 1];
+	public double[] flow_out = new double[Discretization.getNb_steps() + 1];
+	public double[] density = new double[Discretization.getNb_steps() + 1];
 	private double supply_change;
 	private double demande_change;
 
-	public RoadChunk(double l, double v, double w, double f_in,
-			double f_out, double jam_capacity, double density_init) {
+	public RoadChunk(double l, double v, double w, double f_in, double f_out,
+			double jam_capacity, double density_init) {
 		this.l = l;
 		this.v = v;
 		this.w = w;
@@ -29,13 +30,13 @@ public class RoadChunk implements Cell, PlottableCell {
 		F_out = f_out;
 		this.jam_density = jam_capacity;
 		density[0] = density_init;
-		for (int i = 0; i < Environment.getNb_steps() + 1; i++) {
+		for (int i = 0; i < Discretization.getNb_steps() + 1; i++) {
 			flow_in[i] = -1;
 			flow_out[i] = -1;
 		}
 		supply_change = -F_in / w + jam_density;
 		demande_change = F_out / v;
-		identifier = Environment.getNb();
+		identifier = Discretization.getNb();
 	}
 
 	@Override
@@ -98,7 +99,7 @@ public class RoadChunk implements Cell, PlottableCell {
 		/* If we run this function, flow_in[step] is already correct */
 		assert flow_in[step] != -1;
 
-		double t = Environment.getDelta_t();
+		double t = Discretization.getDelta_t();
 		double demand = Math.max(0, Math.min(F_out, v * density[step]));
 		assert demand >= 0 : "the demand should be positive";
 		/* We ask for the supply of the outgoing link */
@@ -129,11 +130,7 @@ public class RoadChunk implements Cell, PlottableCell {
 
 	@Override
 	public void transfer(double flow, int step) {
-		// double t = Environment.getDelta_t();
 		flow_in[step] = flow;
-		// density[step+1] = density[step+1] + t / l * flow;
-		// assert density[step+1] < jam_density :
-		// "The density exceed the jam_density.";
 	}
 
 	@Override
@@ -142,9 +139,13 @@ public class RoadChunk implements Cell, PlottableCell {
 		assert density[0] >= 0 : "Cell " + identifier
 				+ "the initial density must be greater than 0" + density[0];
 		// System.out.println(toString());
-		double delta_t = Environment.getDelta_t();
+		double delta_t = Discretization.getDelta_t();
 		assert v <= l / delta_t : "Cell " + identifier + ": CLF condition " + v
 				+ " <= " + l + " / " + delta_t + " not respected";
+		if (v <= 0.5 * l / delta_t)
+			System.out
+					.println("v < 0,5 * l / delta_t: you may have strange behaviour "
+							+ "(exponential decrease of the density in a emptying cell)");
 		assert w <= l / delta_t : "Cell " + identifier + ": CLF condition " + w
 				+ " <= " + l + " / " + delta_t + " not respected";
 		assert F_in < w * jam_density : "Cell " + identifier
@@ -163,19 +164,35 @@ public class RoadChunk implements Cell, PlottableCell {
 				+ supply_change
 				+ ": The density of free-flow should be smaller than the density of jammed flow.";
 		next.checkConstraints();
-		// System.out.println("OK");
 	}
 
 	@Override
 	public double[] cumulativeDensity(int to_step) {
 		double[] result = new double[to_step + 1];
 		double cumulative = 0;
-		
+
 		for (int i = 0; i < to_step + 1; i++) {
 			cumulative += density[i];
 			result[i] = cumulative;
 		}
-		
+
 		return result;
+	}
+	
+	/**
+	 * @return The total number of cars in the road down-stream (included this cell)
+	 */
+	double countInitialCars() {
+		if (next != null && !next.isSink())
+			return l * density[0] + ((RoadChunk) next).countInitialCars();
+		else
+			return l * density[0];
+	}
+	
+	Sink getSink() {
+		if (next.isSink())
+			return (Sink) next;
+		else
+			return ((RoadChunk) next).getSink();
 	}
 }

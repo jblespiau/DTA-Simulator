@@ -1,5 +1,10 @@
 package model;
 
+
+/**
+ * @class Sink
+ * @brief Represent a bottleneck sink (supply is bounded)
+ */
 public class SinkBottleneck extends Sink {
 
 	private double bottleneck_capacity;
@@ -16,6 +21,6 @@ public class SinkBottleneck extends Sink {
 
 	@Override
 	public String printNetwork(int step) {
-		return "[BottleneckSink: " + bottleneck_capacity + "]";
+		return "[" + bottleneck_capacity + "BottleneckSink: CC:" + cumulative_cars[step] + "]";
 	}
 }
