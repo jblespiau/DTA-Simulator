@@ -29,6 +29,28 @@ public class Plots {
 		return result;
 	}
 
+	/** 
+	 * @brief Open a windows and display the LineChart of a given dataset
+	 */
+	static public void plotLineChartFromCollection (XYSeriesCollection dataset, String name, String x, String y) {
+		JFreeChart chart = ChartFactory.createXYLineChart(name, // title
+				x, // x axis label
+				y, // y axis label
+				dataset, // data
+				PlotOrientation.VERTICAL, true, // include legend
+				true, // tooltips
+				false // urls
+				);
+
+		ChartPanel chartPanel = new ChartPanel(chart);
+		chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
+
+		GUI g = new GUI();
+		g.setContentPane(chartPanel);
+		g.setVisible(true);
+	}
+	
+	
 	/**
 	 * @brief Plot the LineChart from a double[]
 	 * @param data data[i] = f(i)
@@ -66,7 +88,6 @@ public class Plots {
 		g2.setContentPane(chartPanel);
 		g2.setVisible(true);
 	}
-	
 	
 	/** @brief TODO */
 	static public void plotStepChart(double[] data, String name, String x, String y) {

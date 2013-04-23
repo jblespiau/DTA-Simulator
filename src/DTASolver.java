@@ -73,8 +73,8 @@ public class DTASolver {
 		 * the flow 1 is faster than 2
 		 */
 		double l1 = 0.9, v1 = 0.9, w1 = 0.4, f_in1 = 2.5, f_out1 = 2.5, j1 = 10;
-		double l2 = 1, v2 = 1, w2 = 0.6, f_in2 = 2, f_out2 = 2, j2 = 5.8;
-		double l3 = 1, v3 = 1, w3 = 0.6, f_in3 = 2, f_out3 = 2, j3 = 5.8;
+		double l2 = 1, v2 = 1, w2 = 0.6, f_in2 = 3, f_out2 = 3, j2 = 5.8;
+		double l3 = 1, v3 = 1, w3 = 0.6, f_in3 = 3, f_out3 = 3, j3 = 5.8;
 
 		/* Creation of the network */
 		Origin O = new Origin();
@@ -90,9 +90,10 @@ public class DTASolver {
 
 		O.add_link(up_entry);
 		O.add_link(down_entry);
-		down1.setNext(down2);
 		upper.setNext(SB);
-		down2.setNext(S);
+		down1.setNext(S);
+		//down1.setNext(down2);
+		//down2.setNext(S);
 
 		/* Printing of the network to check it is the wanted one */
 		System.out.println();

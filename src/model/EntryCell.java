@@ -10,6 +10,8 @@ package model;
 public class EntryCell implements Cell, PlottableCell {
 
 	public RoadChunk c;
+	double[] cars_demand = new double[Discretization.getNb_steps()];
+	double[] cars_out = new double[Discretization.getNb_steps()];
 	double[] buffer = new double[Discretization.getNb_steps() + 1];
 
 	public EntryCell(RoadChunk c) {
@@ -49,19 +51,29 @@ public class EntryCell implements Cell, PlottableCell {
 		return 0;
 	}
 
-	// At time t we add the flow in buffer[t] than will then be emptied
+	// We take into account the demand and this will be used in the Dynamic
 	@Override
 	public void transfer(double nb_cars, int step) {
-		if (step == 0)
-			buffer[step] = nb_cars;
-		else
-			buffer[step] = buffer[step - 1] + nb_cars;
+		cars_demand[step] = nb_cars;
 	}
 
-	/* In the case of an EntryCell, we just have to compute the flow_in */
+	/*
+	 * The buffer[step] must be completely independent of every values
+	 * calculated after step
+	 */
 	@Override
 	public void runDynamic(int step) {
 		double delta_t = Discretization.getDelta_t();
+		/*
+		 * cars_demand[step] is what is at the buffer at time step while
+		 * cars_out where the cars that left at the givens step
+		 */
+		if (step == 0)
+			buffer[step] = cars_demand[step];
+		else
+			buffer[step] = buffer[step - 1] + cars_demand[step]
+					- cars_out[step - 1];
+
 		double demand = buffer[step] / delta_t;
 		assert demand >= 0 : "the demand should be positive";
 		/* We ask for the supply of the outgoing link */
@@ -73,7 +85,7 @@ public class EntryCell implements Cell, PlottableCell {
 		double out_flow = Math.min(supply, demand);
 		c.transfer(out_flow, step);
 
-		buffer[step + 1] = buffer[step] - out_flow * delta_t;
+		cars_out[step] = out_flow * delta_t;
 		assert buffer[step + 1] >= 0 : "the buffer should be positive";
 
 		/* We run its dynamic */

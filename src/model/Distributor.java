@@ -4,6 +4,9 @@ import graphics.Plots;
 
 import java.util.Iterator;
 
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
 import model.demandFactory.Point;
 
 /**
@@ -128,11 +131,12 @@ public class Distributor {
 			t++;
 		}
 		arrival_this_step = t;
-		System.out.println("Cumulative cars: before:" + B.getY()
-				+ " this step:" + A.getY());
-		System.out.println("Sink cars: t1:" + B.getY() + " t2:"
-				+ arrival_this_step + " & (t2 - 1):"
-				+ sinks[cell].getCumulative_cars(arrival_this_step - 1));
+		/*
+		 * System.out.println("Cumulative cars: before:" + B.getY() +
+		 * " this step:" + A.getY()); System.out.println("Sink cars: t1:" +
+		 * B.getY() + " t2:" + arrival_this_step + " & (t2 - 1):" +
+		 * sinks[cell].getCumulative_cars(arrival_this_step - 1));
+		 */
 		// Point D = new Point(t * Discretization.getDelta_t(), A.getY());
 
 		double cars_demand = split_ratio[cell][step] * total_demand[step];
@@ -144,15 +148,12 @@ public class Distributor {
 		double average_travel_time = (weighted_travel_time - exceeded_time)
 				/ cars_demand * delta_t;
 
-		System.out.println("In the output of the computeLinkTT "
-				+ average_travel_time + "\n");
 		return average_travel_time;
 	}
 
 	/**
 	 * @brief Computes all the Average Travel Time for each pools of cars that
-	 *        left at the given step TODO: optimize to only calculate the adding
-	 *        cars twice
+	 *        left at the given step
 	 */
 	double[] computeLinksTT(int step) {
 
@@ -171,8 +172,7 @@ public class Distributor {
 		for (int i = 0; i < nb_out_links; i++) {
 			double leaving = split_ratio[i][step] * total_demand[step];
 			leaving_cars[i][step] = leaving;
-			if (i == 1)
-				System.out.println("Leaving cars 1: step: " + step + " " + leaving);
+
 			/*
 			 * Moreover we put some cars after that step to make sure the sink
 			 * will be filled up
@@ -186,6 +186,8 @@ public class Distributor {
 			 * We run the dynamic (compute the flows at step $time, and the
 			 * density at step ($time + 1)
 			 */
+			assert time < Discretization.getNb_steps();
+			System.out.println("TIme step asked:" + time);
 			runDynamic(time);
 
 			/* We check if everyone has arrived to its destination */
@@ -225,11 +227,11 @@ public class Distributor {
 	 * magic_coef * gradient * (objectif - value)
 	 */
 	private double magic_coef = 0.1;
-
+ /*
 	private double[] gradientComputation(double[] TT, int step) {
 
 		for (int i = 0; i < nb_out_links; i++) {
-			/* We add the cars in the next buffers */
+			// We add the cars in the next buffers 
 			leaving_cars[i][step] = split_ratio[i][step] * total_demand[step]
 					* (1 + magic_coef);
 		}
@@ -243,22 +245,28 @@ public class Distributor {
 		}
 
 		return gradient;
-	}
+	} */
 
 	/**
-	 * @brief Compute the average of the travel times
+	 * @brief Compute the average of the travel times of used roads
 	 */
-	private double averageTT(double[] TT) {
+	private double averageTT(double[] TT, int step) {
 		double result = 0;
-		for (int i = 0; i < nb_out_links; i++)
-			result += TT[i];
-		return result / (double) nb_out_links;
+		double nb_roads_used = 0;
+		// TODO: better define and put roads to empty
+		for (int i = 0; i < nb_out_links; i++) {
+			if (!Discretization.equals(split_ratio[i][step], 0)) {
+				result += TT[i];
+				nb_roads_used++;
+			}
+		}
+		return result / nb_roads_used;
 	}
 
 	/**
 	 * @return True if the travel times are equals within the roads TODO: accept
-	 *         a travel time higher if empty road
-	 *         TODO: Accept optimal when empty roads have a huge latency
+	 *         a travel time higher if empty road TODO: Accept optimal when
+	 *         empty roads have a huge latency
 	 */
 	private boolean isOptimal(double target, double[] TT) {
 		for (int i = 0; i < nb_out_links; i++) {
@@ -282,24 +290,36 @@ public class Distributor {
 
 		/* We compute the according travel times */
 		double[] TT = computeLinksTT(step);
-		for (int i = 0; i < sinks.length; i++) {
-			//sinks[i].plot("Sink " + i, "time", "Arrived cars");
-		}
+		/*
+		 * for (int i = 0; i < sinks.length; i++) { sinks[i].plot("Sink " + i,
+		 * "time", "Arrived cars"); }
+		 */
 
 		/*
-		for (int i = 0; i < cumulative_left_cars.length; i++) {
-			Plots.plotLineChart(cumulative_left_cars[i], "Cumulative " + i,
-					"time", "Cumulative cars");
-			Plots.plotLineChart(leaving_cars[i], "Leaving cars " + i, "time",
-					"Leaving cars");
-		} */
+		 * for (int i = 0; i < cumulative_left_cars.length; i++) {
+		 * Plots.plotLineChart(cumulative_left_cars[i], "Cumulative " + i,
+		 * "time", "Cumulative cars"); Plots.plotLineChart(leaving_cars[i],
+		 * "Leaving cars " + i, "time", "Leaving cars"); }
+		 */
 
-		double average = averageTT(TT);
-		System.out.println("Average attemps 1 " + average);
+		double average = averageTT(TT, step);
+
+		for (int i = 0; i < nb_out_links; i++)
+			System.out.println("TT Path " + i + ": " + TT[i]);
+		System.out.println("ATT " + average);
+
+		// For plotting
+		double[][] TT_at_steps = new double[nb_out_links][100];
+		XYSeriesCollection dataset = new XYSeriesCollection();
+		XYSeries series[] = new XYSeries[nb_out_links];
+		for (int i = 0; i < nb_out_links; i++) {
+			series[i] = new XYSeries("Road " + i);
+		}
+		
 		int attempts = 1;
 		while (!isOptimal(average, TT)) {
-			if (attempts == 2)
-				return;
+			//if (attempts == 2)
+				//return;
 			if (attempts % 100 == 0)
 				magic_coef /= 10;
 			if (attempts == 10000) {
@@ -307,23 +327,63 @@ public class Distributor {
 				return;
 			}
 			/* We compute the according gradient */
-			gradient = gradientComputation(TT, step);
+			// gradient = gradientComputation(TT, step);
 
 			/* We affect the new ratio */
-			double remaining_split_ratio = 1;
+			//double remaining_split_ratio = 1;
 
 			// TODO: Manage null gradient
-			for (int i = 0; i < nb_out_links - 1; i++) {
-				split_ratio[i][step] += gradient[i] * (average - TT[i]);
-				remaining_split_ratio -= split_ratio[i][step];
-			}
-			split_ratio[nb_out_links - 1][step] = remaining_split_ratio;
+			//for (int i = 0; i < nb_out_links - 1; i++) {
+				// split_ratio[i][step] += gradient[i] * (average - TT[i]);
+				//remaining_split_ratio -= split_ratio[i][step];
+			//}
+			//split_ratio[nb_out_links - 1][step] = remaining_split_ratio;
 
+			double alpha_max = 0.1;
+			for (int i = 0; i < nb_out_links; i++) {
+				if ( TT[i] != 0)
+					alpha_max = Math.min(alpha_max, split_ratio[i][step] / TT[i]);
+			}
+			System.out.println("Alphamax = " + alpha_max);
+			
+			double sum_split_ratio = 0;
+			for (int i = 0; i < nb_out_links; i++) {
+				split_ratio[i][step] *= Math.exp(-TT[i]);
+				sum_split_ratio  += split_ratio[i][step];
+
+			}
+			// Normalisation
+			for (int i = 0; i < nb_out_links; i++) {
+				split_ratio[i][step] = split_ratio[i][step] / sum_split_ratio;
+				System.out.println("Split ratio " + i + " :" +  split_ratio[i][step]);
+			}
+			
 			TT = computeLinksTT(step);
-			average = averageTT(TT);
-			System.out.println("Average attemps " + attempts + " " + average);
+			average = averageTT(TT, step);
+			
+			// Plot
+			for (int i = 0; i < nb_out_links; i++) {
+					series[i].add(attempts, TT[i]);
+			}
+			
+			for (int i = 0; i < nb_out_links; i++) {
+				TT_at_steps[i][attempts] = TT[i];
+			}
+			
+			for (int i = 0; i < nb_out_links; i++)
+				System.out.println("TT Path " + i + ": " + TT[i]);
+			System.out.println("ATT " + average);
+
 			attempts++;
 		}
+		
+		System.out.println("Converge after " + attempts);
+
+		for (int i = 0; i < nb_out_links; i++) {
+			dataset.addSeries(series[i]);			
+		}
+		Plots.plotLineChartFromCollection(dataset, "Convergence", "10*steps", "Travel Time");
+		
 		magic_coef = 0.1;
 
 		for (int i = 0; i < nb_out_links - 1; i++) {
