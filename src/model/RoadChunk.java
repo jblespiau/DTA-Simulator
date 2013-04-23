@@ -112,7 +112,7 @@ public class RoadChunk implements Cell, PlottableCell {
 		next.transfer(out_flow, step);
 
 		/* We update the density if the cell */
-		assert density[step] - t / l * out_flow >= 0; // Check the out_flow is
+		assert density[step] - t / l * out_flow >= 0; // Check the out_flow is positive
 														// possible
 		density[step + 1] = density[step] + t / l * (flow_in[step] - out_flow);
 

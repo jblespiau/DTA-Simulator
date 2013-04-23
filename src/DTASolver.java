@@ -44,12 +44,12 @@ public class DTASolver {
 		 */
 		Demand d = new Demand();
 		d.add(new Point(0, 5));
-		d.add(new Point(1, 2));
-		d.add(new Point(2, 1));
-		d.add(new Point(3, 1));
+		d.add(new Point(1, 4));
+		d.add(new Point(2, 3));
+		d.add(new Point(3, 2));
 		d.add(new Point(4, 3));
-		d.add(new Point(5, 2));
-		d.add(new Point(6, 1));
+		d.add(new Point(5, 4));
+		d.add(new Point(6, 5));
 		d.add(new Point(7, 1));
 		d.add(new Point(8, 1));
 		d.add(new Point(9, 3));
@@ -73,8 +73,8 @@ public class DTASolver {
 		 * the flow 1 is faster than 2
 		 */
 		double l1 = 0.9, v1 = 0.9, w1 = 0.4, f_in1 = 2.5, f_out1 = 2.5, j1 = 10;
-		double l2 = 1, v2 = 1, w2 = 0.6, f_in2 = 3, f_out2 = 3, j2 = 5.8;
-		double l3 = 1, v3 = 1, w3 = 0.6, f_in3 = 3, f_out3 = 3, j3 = 5.8;
+		double l2 = 1, v2 = 1, w2 = 0.6, f_in2 = 2, f_out2 = 2, j2 = 5.8;
+		double l3 = 1, v3 = 1, w3 = 0.6, f_in3 = 2, f_out3 = 2, j3 = 5.8;
 
 		/* Creation of the network */
 		Origin O = new Origin();
@@ -217,6 +217,9 @@ public class DTASolver {
 		Distributor user_finder = new Distributor(demand_1, O);
 		user_finder.build();
 		user_finder.findOptimalSplitRatio(0);
+		user_finder.findOptimalSplitRatio(1);
+		user_finder.findOptimalSplitRatio(2);
+		user_finder.findOptimalSplitRatio(3);
 		System.out.println("Found !");
 
 		for (int i = 0; i <= nb_steps; i++) {

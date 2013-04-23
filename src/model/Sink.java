@@ -82,4 +82,8 @@ public class Sink implements Cell {
 	void plot (String name, String x, String y) {
 		Plots.plotLineChart(cumulative_cars, name, x, y);
 	}
+
+	double[] getCumulative_cars() {
+		return cumulative_cars;
+	}
 }

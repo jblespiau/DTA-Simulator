@@ -39,9 +39,13 @@ public class Discretization {
 	}
 
 	/**
-	 * @return an optimistic (a >= b) (if a is nearly greater, it returns true
+	 * @return an optimistic (a >= b) (if a is nearly greater, it returns true)
 	 */
 	public static boolean greaterThan(double a, double b) {
 		return a + epsilon> b;
+	}
+
+	public static double getEpsilon() {
+		return epsilon;
 	}
 }
