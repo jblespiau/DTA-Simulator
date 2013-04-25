@@ -101,12 +101,12 @@ public class Distributor {
 	 *        the given step to a given cell considering that enough of the
 	 *        future has been computed (states of sinks, cumulative_left_cars)
 	 */
-	double computeLinkTT(int cell, int step) {
+	public double computeLinkTT(int cell, int step) {
 		double delta_t = Discretization.getDelta_t();
 
 		Point A = new Point(step, cumulative_left_cars[cell][step]);
-		//System.out.println("Cumulative left cars at step " + step + " :"
-		//		+ cumulative_left_cars[cell][step]);
+		// System.out.println("Cumulative left cars at step " + step + " :"
+		// + cumulative_left_cars[cell][step]);
 		Point B;
 		if (step == 0)
 			B = new Point(step, 0);
@@ -135,40 +135,35 @@ public class Distributor {
 		arrival_this_step = t;
 
 		/*
-		System.out.println("Cumulative leaving cars: (step-1)" + B.getY()
-				+ " (step)" + A.getY());
-		System.out.println("Sink cars: (step):" + B.getY() + " last_arrived " + arrival_this_step + ":"
-				+ sinks[cell].getCumulative_cars(arrival_this_step)
-				+ " & (last_arrived - 1):"
-				+ sinks[cell].getCumulative_cars(arrival_this_step - 1));
-				*/
+		 * System.out.println("Cumulative leaving cars: (step-1)" + B.getY() +
+		 * " (step)" + A.getY()); System.out.println("Sink cars: (step):" +
+		 * B.getY() + " last_arrived " + arrival_this_step + ":" +
+		 * sinks[cell].getCumulative_cars(arrival_this_step) +
+		 * " & (last_arrived - 1):" +
+		 * sinks[cell].getCumulative_cars(arrival_this_step - 1));
+		 */
 
 		// Point D = new Point(arrival_this_step, A.getY());
 		// TODO: manage a demand equals to zero...
 		double cars_demand = leaving_cars[cell][step];
-		/* If the number of cars leaving is equals to zero, we can't compute the TT.
-		 * We force a positive inf-low to be able to get the TT
-		 * TODO: find a good cars_demand in order to get the real TT
+		if (cars_demand == 0)
+			System.out.println("0 leaving cars in computeLink");
+		/*
+		 * If the number of cars leaving is equals to zero, we can't compute the
+		 * TT. We force a positive inf-low to be able to get the TT TODO: find a
+		 * good cars_demand in order to get the real TT
 		 */
-		boolean demand_was_zero = false;
-		if (Discretization.equals(cars_demand, 0)) {
-			demand_was_zero = true;
-			cars_demand = 1; //Discretization.getEpsilon() * 1000 * total_demand[step];
-			leaving_cars[cell][step] = cars_demand;
-		}
+
 		double weighted_travel_time = cars_demand * (arrival_this_step - step);
 		double exceeded_time = 0;
 		for (int tmp = arrival_previous_step; tmp < arrival_this_step; tmp++)
 			exceeded_time += sinks[cell].getCumulative_cars(tmp) - B.getY();
 
 		double average_travel_time = (weighted_travel_time - exceeded_time)
-				/ cars_demand; // *  * delta_t
-				
+				/ cars_demand; // * * delta_t
+
 		assert average_travel_time >= 0 : "The Average Travel Time should be positive";
 
-		if (demand_was_zero)
-			leaving_cars[cell][step] = 0;
-		
 		return average_travel_time;
 	}
 
@@ -176,15 +171,30 @@ public class Distributor {
 	 * @brief Computes all the Average Travel Time for each pools of cars that
 	 *        left at the given step
 	 */
-	double[] computeLinksTT(int step) {
+	public double[] computeLinksTT(int step) {
 
 		double[] result = new double[nb_out_links];
 
 		/*
 		 * We compute the number of cars leaving.
 		 */
+		boolean[] demand_was_zero = new boolean[nb_out_links];
+		for (int i = 0; i < nb_out_links; i++)
+			demand_was_zero[i] = false;
+
 		for (int i = 0; i < nb_out_links; i++) {
 			double leaving = split_ratio[i][step] * total_demand[step];
+			if (Discretization.equals(leaving, 0)) {
+				// TODO: find a good cars_demand in order to get the real TT
+				demand_was_zero[i] = true;
+				System.out
+						.println("No leaving cars. We input a small arbitrary inflow");
+				leaving = 1;
+			}
+			if (split_ratio[i][step] == 0)
+				if (!demand_was_zero[i])
+					System.out.println("Bug à discretization.equals");
+
 			leaving_cars[i][step] = leaving;
 
 			/*
@@ -207,7 +217,7 @@ public class Distributor {
 			 * We run the dynamic (compute the flows at step $time, and the
 			 * density at step ($time + 1)
 			 */
-			assert time < Discretization.getNb_steps() : "The Travel Time can't be computed because there "
+			assert time < Discretization.getNb_steps() - 1 : "The Travel Time can't be computed because there "
 					+ "lacks steps to forward simulate";
 			runDynamic(time);
 
@@ -226,6 +236,13 @@ public class Distributor {
 		System.out.println("Forward simulation needed: " + time);
 		for (int i = 0; i < nb_out_links; i++) {
 			result[i] = computeLinkTT(i, step);
+		}
+
+		// TODO: check this is without consequences
+		for (int i = 0; i < nb_out_links; i++) {
+			if (demand_was_zero[i]) {
+				leaving_cars[i][step] = 0;
+			}
 		}
 		return result;
 	}
@@ -316,13 +333,11 @@ public class Distributor {
 		 */
 
 		/*
-		if (step == 1)
-			for (int i = 0; i < cumulative_left_cars.length; i++) {
-				Plots.plotLineChart(cumulative_left_cars[i], "Cumulative " + i,
-						"time", "Cumulative cars");
-				Plots.plotLineChart(leaving_cars[i], "Leaving cars " + i,
-						"time", "Leaving cars");
-			} */
+		 * if (step == 1) for (int i = 0; i < cumulative_left_cars.length; i++)
+		 * { Plots.plotLineChart(cumulative_left_cars[i], "Cumulative " + i,
+		 * "time", "Cumulative cars"); Plots.plotLineChart(leaving_cars[i],
+		 * "Leaving cars " + i, "time", "Leaving cars"); }
+		 */
 
 		final int max_attempts = 100;
 
@@ -352,7 +367,6 @@ public class Distributor {
 			TT = computeLinksTT(step);
 			average = averageTT(TT, step);
 
-
 			for (int i = 0; i < nb_out_links; i++)
 				System.out.println("TT Path " + i + ": " + TT[i]);
 			System.out.println("ATT " + average);
@@ -368,7 +382,7 @@ public class Distributor {
 
 			double sum_split_ratio = 0;
 			for (int i = 0; i < nb_out_links; i++) {
-				split_ratio[i][step] *= Math.exp(-TT[i]);
+				split_ratio[i][step] *= Math.exp(- TT[i]);
 				sum_split_ratio += split_ratio[i][step];
 
 			}
@@ -394,8 +408,8 @@ public class Distributor {
 		// TODO: put 1 to 1 and 0 to 0
 		System.out.println("Converged after" + attempts + "\n");
 		for (int i = 0; i < nb_out_links; i++) {
-			System.out.println("Travel time for " + i + " is: " + TT[i]
-					+ " for ratio " + split_ratio[i][step]);
+			System.out.println("Travel time for " + i + ", step " + step
+					+ " is: " + TT[i] + " for ratio " + split_ratio[i][step]);
 		}
 		System.out.println("**********************************");
 
@@ -407,6 +421,10 @@ public class Distributor {
 
 		magic_coef = 0.1;
 
+	}
+
+	public double[][] getSplit_ratio() {
+		return split_ratio;
 	}
 }
 

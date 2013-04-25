@@ -58,6 +58,7 @@ public class RoadChunk implements Cell, PlottableCell {
 		return next;
 	}
 
+	@Override
 	public void setNext(Cell next) {
 		this.next = next;
 	}

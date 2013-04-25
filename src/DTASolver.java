@@ -34,8 +34,8 @@ public class DTASolver {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int nb_steps = 10;
-		double delta_t = 1;
+		int nb_steps = 50;
+		double delta_t = 0.5;
 		Discretization.setDelta_t(delta_t);
 		Discretization.setNb_steps(nb_steps);
 
@@ -50,9 +50,13 @@ public class DTASolver {
 		d.add(new Point(4, 3));
 		d.add(new Point(5, 4));
 		d.add(new Point(6, 5));
-		d.add(new Point(7, 1));
-		d.add(new Point(8, 1));
-		d.add(new Point(9, 3));
+		d.add(new Point(7, 6));
+		d.add(new Point(8, 7));
+		d.add(new Point(9, 9));
+		d.add(new Point(9, 9));
+		d.add(new Point(10, 3));
+		d.add(new Point(20, 3.3));
+		d.add(new Point(30, 3));
 		d.display();
 		double[] demand_1 = d.buildDemand();
 
@@ -72,11 +76,38 @@ public class DTASolver {
 		 * We try to have 1 is jammed 2 is in free_flow and F_in2 never limiting
 		 * the flow 1 is faster than 2
 		 */
-		double l1 = 0.9, v1 = 0.9, w1 = 0.4, f_in1 = 2.5, f_out1 = 2.5, j1 = 10;
-		double l2 = 1, v2 = 1, w2 = 0.6, f_in2 = 2, f_out2 = 2, j2 = 5.8;
+		double l1 = 0.9, v1 = l1 / delta_t, w1 = 0.4, f_in1 = 2.5, f_out1 = 2.5, j1 = 10;
+		double l2 = 1, v2 = l2 / delta_t, w2 = 0.6, f_in2 = 2, f_out2 = 2, j2 = 5.8;
 		double l3 = 1, v3 = 1, w3 = 0.6, f_in3 = 2, f_out3 = 2, j3 = 5.8;
 
 		/* Creation of the network */
+		/* We create 2 roads, with  9,10 cells */
+		Origin O = new Origin();
+		EntryCell e;
+		e = new EntryCell(new RoadChunk(l1, v1, w1, f_in1, f_out1, j1, 0));
+		O.add_link(e);
+		RoadChunk rc = e.c;
+		RoadChunk tmp;
+		for (int i = 0; i < 4; i++)	 {
+			tmp = new RoadChunk(l1, v1, w1, f_in1, f_out1, j1, 0);
+			rc.setNext(tmp);
+			rc = tmp;
+		}
+		SinkBottleneck SB = new SinkBottleneck(1.5);
+		rc.setNext(SB);
+		
+		e = new EntryCell(new RoadChunk(l2, v2, w2, f_in2, f_out2, j2, 0));
+		O.add_link(e);
+		rc = e.c;
+		for (int i = 0; i < 5; i++)	 {
+			tmp = new RoadChunk(l2, v2, w2, f_in2, f_out2, j2, 0);
+			rc.setNext(tmp);
+			rc = tmp;
+		}
+		Sink S = new Sink();
+		rc.setNext(S);
+		
+		/*
 		Origin O = new Origin();
 		RoadChunk upper = new RoadChunk(l1, v1, w1, f_in1, f_out1, j1, 0);
 		EntryCell up_entry = new EntryCell(upper);
@@ -92,11 +123,11 @@ public class DTASolver {
 		O.add_link(down_entry);
 		upper.setNext(SB);
 		down1.setNext(S);
+		**/
 		//down1.setNext(down2);
 		//down2.setNext(S);
 
-		/* Printing of the network to check it is the wanted one */
-		System.out.println();
+
 
 		/* Definition of the flows: [i][step] */
 		double[][] flows = new double[2][nb_steps];
@@ -112,6 +143,9 @@ public class DTASolver {
 		/***********************************************************
 		 * Checking the initial conditions and running the dynamic *
 		 ***********************************************************/
+		/* Printing of the network to check it is the wanted one */
+		System.out.println();
+		Solver.printNetwork(O, 0);
 		System.out.println("Checking CFL conditions...");
 		Solver.checkConstraints(O);
 		System.out.println("Simulation");
@@ -216,17 +250,44 @@ public class DTASolver {
 		 *********************************/
 		Distributor user_finder = new Distributor(demand_1, O);
 		user_finder.build();
-		user_finder.findOptimalSplitRatio(0);
-		user_finder.findOptimalSplitRatio(1);
-		user_finder.findOptimalSplitRatio(2);
-		user_finder.findOptimalSplitRatio(3);
+		int future = 20;
+		for (int i = 0; i < future; i++)
+			user_finder.findOptimalSplitRatio(i);
+
 		System.out.println("Found !");
 
-		for (int i = 0; i <= nb_steps; i++) {
+		for (int i = 0; i <= future; i++) {
 			System.out.println("Time step: " + i);
 			Solver.printNetwork(O, i);
 			System.out.println();
 		}
+		
+		// Test to see if the FIFO constrains is verified
+		// TODO: compute the TT for empty links
+		//double[][] split_ratio;
+		double[][] travel_time = new double[O.getNbRoads()][future];
+		//split_ratio = user_finder.getSplit_ratio();
+		double[] TT;
+		for (int i = 0; i < future; i++) {
+			TT = user_finder.computeLinksTT(i);
+			for (int cell = 0; cell < O.getNbRoads(); cell++) {
+				travel_time[cell][i] = TT[cell];
+			}
+		}
+			
+		// For plotting
+		XYSeriesCollection dataset = new XYSeriesCollection();
+		XYSeries series;
+		for (int cell = 0; cell < O.getNbRoads(); cell++) {
+			series = new XYSeries("Road " + cell);
+			for (int k = 0; k < future; k++) {
+				series.add(k, travel_time[cell][k]);
+			}
+			dataset.addSeries(series);
+		}
+		
+		Plots.plotLineChartFromCollection(dataset, "Final TTs",
+				"steps", "Travel Time");
+		
 	}
-
 }

@@ -16,6 +16,7 @@ public interface Cell {
 
 	abstract public boolean isSink();
 
+	abstract public void setNext(Cell next);
 	abstract public Cell getNext();
 
 	abstract public String printNetwork(int step);

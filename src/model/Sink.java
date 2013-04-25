@@ -86,4 +86,10 @@ public class Sink implements Cell {
 	double[] getCumulative_cars() {
 		return cumulative_cars;
 	}
+
+	@Override
+	public void setNext(Cell next) {
+		// TODO Auto-generated method stub
+		
+	}
 }

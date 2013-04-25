@@ -107,4 +107,9 @@ public class EntryCell implements Cell, PlottableCell {
 	public double[] cumulativeDensity(int to_step) {
 		return c.cumulativeDensity(to_step);
 	}
+
+	@Override
+	public void setNext(Cell next) {
+		c.setNext(next);
+	}
 }

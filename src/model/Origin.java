@@ -11,7 +11,7 @@ import model.demandFactory.Demand;
  *        its out-links and for each time steps.
  * 
  */
-public class Origin implements Cell {
+public class Origin {
 
 	public Demand d;
 	private ArrayList<EntryCell> L;
@@ -35,7 +35,6 @@ public class Origin implements Cell {
 		return "[Origin]";
 	}
 
-	@Override
 	public String printNetwork(int step) {
 
 		if (step == Discretization.getNb_steps())
@@ -50,22 +49,6 @@ public class Origin implements Cell {
 		return L.iterator();
 	}
 
-	@Override
-	public boolean isOrigin() {
-		return true;
-	}
-
-	@Override
-	public boolean isOrdinaryCell() {
-		return false;
-	}
-
-	@Override
-	public boolean isSink() {
-		return false;
-	}
-
-	@Override
 	public void runDynamic(int step) {
 
 		for (int i = 0; i < L.size(); i++) {
@@ -75,40 +58,11 @@ public class Origin implements Cell {
 		}
 	}
 
-	/* An origin has no offer but only a demand for transit */
-	@Override
-	public double supply(int step) {
-		System.out
-				.println("A request of offer of transit has been done to an origin.");
-		System.exit(-1);
-		return 0;
-	}
-
-	@Override
-	public Cell getNext() {
-		System.out
-				.println("A request of next cell has been done to an origin.");
-		System.exit(-1);
-		return new Sink();
-	}
-
 	public double[][] getFlow() {
 		return cars_leaving;
 	}
 
 	public void setFlow(double[][] flow) {
 		this.cars_leaving = flow;
-	}
-
-	@Override
-	public void transfer(double flow, int step) {
-		System.out
-				.println("A request of next cell has been done to an origin.");
-		System.exit(-1);
-	}
-
-	@Override
-	public void checkConstraints() {
-		// TODO Auto-generated method stub
 	}
 }
