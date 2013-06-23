@@ -9,17 +9,17 @@ package model;
  */
 public class EntryCell implements Cell, PlottableCell {
 
-	public RoadChunk c;
+	public RoadChunk cell;
 	double[] cars_demand = new double[Discretization.getNb_steps()];
 	double[] cars_out = new double[Discretization.getNb_steps()];
 	double[] buffer = new double[Discretization.getNb_steps() + 1];
 
 	public EntryCell(RoadChunk c) {
-		this.c = c;
+		this.cell = c;
 	}
 
 	public EntryCell(RoadChunk c, double buffer) {
-		this.c = c;
+		this.cell = c;
 		this.buffer[0] = buffer;
 	}
 
@@ -40,7 +40,7 @@ public class EntryCell implements Cell, PlottableCell {
 
 	@Override
 	public String printNetwork(int step) {
-		return "[buffer: " + buffer[step] + " cars]" + c.printNetwork(step);
+		return "[buffer: " + buffer[step] + " cars]" + cell.printNetwork(step);
 	}
 
 	@Override
@@ -66,7 +66,7 @@ public class EntryCell implements Cell, PlottableCell {
 		double delta_t = Discretization.getDelta_t();
 		/*
 		 * cars_demand[step] is what is at the buffer at time step while
-		 * cars_out where the cars that left at the givens step
+		 * cars_out where the cars that left at the given step
 		 */
 		if (step == 0)
 			buffer[step] = cars_demand[step];
@@ -77,39 +77,38 @@ public class EntryCell implements Cell, PlottableCell {
 		double demand = buffer[step] / delta_t;
 		assert demand >= 0 : "the demand should be positive";
 		/* We ask for the supply of the outgoing link */
-		double supply = c.supply(step);
-
+		double supply = cell.supply(step);
 		assert supply >= 0 : "the supply should be positive";
 
 		/* We set the incoming flow */
 		double out_flow = Math.min(supply, demand);
-		c.transfer(out_flow, step);
+		cell.transfer(out_flow, step);
 
 		cars_out[step] = out_flow * delta_t;
 		assert buffer[step + 1] >= 0 : "the buffer should be positive";
 
 		/* We run its dynamic */
-		c.runDynamic(step);
+		cell.runDynamic(step);
 	}
 
 	@Override
 	public Cell getNext() {
-		return c.getNext();
+		return cell.getNext();
 	}
 
 	@Override
 	public void checkConstraints() {
 		assert buffer[0] >= 0 : "the initial buffer size should be greater than 0";
-		c.checkConstraints();
+		cell.checkConstraints();
 	}
 
 	@Override
 	public double[] cumulativeDensity(int to_step) {
-		return c.cumulativeDensity(to_step);
+		return cell.cumulativeDensity(to_step);
 	}
 
 	@Override
 	public void setNext(Cell next) {
-		c.setNext(next);
+		cell.setNext(next);
 	}
 }

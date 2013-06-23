@@ -74,7 +74,7 @@ public class Solver {
 	 *         into account the buffer that should be empty at time 0
 	 */
 	public static double countInitialCars(EntryCell E) {
-		return E.c.countInitialCars();
+		return E.cell.countInitialCars();
 	}
 
 }

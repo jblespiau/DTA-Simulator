@@ -11,7 +11,7 @@ public class Discretization {
 	private static double delta_t;
 	private static int nb_steps = 1;
 	private static int nb_cell = 0;
-	private static double epsilon = 0.000001;
+	private static double epsilon = 0.00001;
 
 	public static double getDelta_t() {
 		return delta_t;
