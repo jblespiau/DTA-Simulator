@@ -184,7 +184,7 @@ public class DTASolver {
     XYSeriesCollection datasetSR = new XYSeriesCollection();
     XYSeries seriesSR;
     for (int cell = 0; cell < O.getNbRoads(); cell++) {
-      seriesSR = new XYSeries("Road " + cell);
+      seriesSR = new XYSeries("Road " + (cell + 1));
       for (int k = 0; k < future; k++) {
         seriesSR.add(k, SR[cell][k]);
       }
