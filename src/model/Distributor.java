@@ -43,7 +43,7 @@ public class Distributor {
    * @brief Build a distributor from an origin of a given network. It is
    *        mandatory to call it after having set all the paths. A distributor
    *        works only on the network it was build for
-   *
+   * 
    * @details This fixes numerous parameters (number of roads ...) according
    *          to the state of the network.
    */
@@ -59,6 +59,7 @@ public class Distributor {
     sinks = new Sink[nb_out_links];
     initial_cars_on_road = new double[nb_out_links];
 
+    O.setFlow(new double[nb_out_links][nb_steps]);
     /*
      * We compute the initial numbers of cars in the network and remove this
      * number to the number of cars which arrives at the sinks
@@ -235,7 +236,7 @@ public class Distributor {
       time++;
     } while (!all_flows_exited);
 
-    // System.out.println("Forward simulation needed: " + time);
+    System.out.println("Forward simulation needed: " + time);
     for (int i = 0; i < nb_out_links; i++) {
       result[i] = computeLinkTT(i, step);
     }
@@ -308,15 +309,17 @@ public class Distributor {
    *         Equilibrium
    */
   private boolean isOptimal(double[] TT, int step, double error) {
-    double Cost = 0;
+    double cost = 0;
     double minimal_cost = Double.MAX_VALUE;
     for (int i = 0; i < nb_out_links; i++) {
-      Cost += split_ratio[i][step] * TT[i];
+      cost += split_ratio[i][step] * TT[i];
       if (TT[i] < minimal_cost)
         minimal_cost = TT[i];
     }
-    assert minimal_cost < Cost;
-    return Cost - minimal_cost < error;
+    assert minimal_cost < cost;
+    //return Cost < minimal_cost * (1 + error)
+    //    && Cost > minimal_cost * (1 - error);
+    return Math.abs(cost - minimal_cost) < error;
   }
 
   public void findOptimalSplitRatio(int step, double error) {
@@ -330,6 +333,7 @@ public class Distributor {
       System.exit(1);
     }
 
+    System.out.println("Optimizing time step " + step);
     /* Initialization of some split ratio for the given time step */
     initializeSplitRatio(step);
 
@@ -424,8 +428,10 @@ public class Distributor {
     for (int i = 0; i < nb_out_links; i++) {
       dataset.addSeries(series[i]);
     }
-    Plots.plotLineChartFromCollection(dataset, "Convergence step " + step,
-        "10*steps", "Travel Time");
+    /*
+     * Plots.plotLineChartFromCollection(dataset, "Convergence step " + step,
+     * "10*steps", "Travel Time");
+     */
 
     magic_coef = 0.1;
 

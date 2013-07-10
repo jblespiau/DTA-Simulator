@@ -1,14 +1,31 @@
 package io;
 
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.Closeable;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.Formatter;
+
+import org.jfree.chart.JFreeChart;
+
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.DefaultFontMapper;
+import com.lowagie.text.pdf.FontMapper;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfTemplate;
+import com.lowagie.text.pdf.PdfWriter;
 
 public class InputOutput {
 
@@ -47,7 +64,8 @@ public class InputOutput {
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
-    formatter.format("Size of the matrix: " + table[0].length + "x" + table.length + "\n");
+    formatter.format("Size of the matrix: " + table[0].length + "x"
+        + table.length + "\n");
     for (int i = 0; i < table.length; i++) {
       for (int j = 0; j < table[0].length; j++)
         formatter.format("%6.2f ", table[i][j]);
@@ -107,5 +125,46 @@ public class InputOutput {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  /**
+   * Writes a chart to a a file in PDF format.
+   */
+  public static void writeChartAsPDF(String file_name, JFreeChart chart,
+      int width, int height, FontMapper mapper) {
+
+    File file = new File(file_name);
+    OutputStream out = null;
+    try {
+      out = new BufferedOutputStream(new FileOutputStream(file));
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+      return;
+    }
+
+    Rectangle pagesize = new Rectangle(width, height);
+    Document document = new Document(pagesize, 50, 50, 50, 50);
+    try {
+      PdfWriter writer = PdfWriter.getInstance(document, out);
+      // document.addAuthor("JFreeChart");
+      // document.addSubject("Demonstration");
+      document.open();
+      PdfContentByte cb = writer.getDirectContent();
+      PdfTemplate tp = cb.createTemplate(width, height);
+      Graphics2D g2 = tp.createGraphics(width, height, mapper);
+      Rectangle2D r2D = new Rectangle2D.Double(0, 0, width, height);
+      chart.draw(g2, r2D);
+      g2.dispose();
+      cb.addTemplate(tp, 0, 0);
+    } catch (DocumentException de) {
+      System.err.println(de.getMessage());
+    }
+    document.close();
+    close(out);
+  }
+
+  public static void writeChartAsPDF(String file_name, JFreeChart chart,
+      int width, int height){
+    writeChartAsPDF(file_name, chart, width, height, new DefaultFontMapper());
   }
 }
