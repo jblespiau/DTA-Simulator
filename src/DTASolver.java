@@ -1,17 +1,27 @@
 import io.InputOutput;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.Polygon;
+import java.awt.Shape;
+import java.awt.geom.Rectangle2D;
 
 import graphics.GUI;
 import graphics.Plots;
 
+import org.jfree.chart.ChartColor;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
+import org.jfree.chart.plot.DefaultDrawingSupplier;
+import org.jfree.chart.plot.DrawingSupplier;
+import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.title.LegendTitle;
@@ -120,7 +130,7 @@ public class DTASolver {
      *********************************/
     System.out.println("\n***Running optimization*** \n");
     Distributor user_finder = new Distributor(demand, O);
-    double error = 10E-3;
+    double error = 0.01;
     int future = 11;
     for (int k = 0; k < future; k++)
       user_finder.findOptimalSplitRatio(k, error);
@@ -159,18 +169,45 @@ public class DTASolver {
 
     JFreeChart chartTT = ChartFactory.createXYLineChart(null, // title
         "Time steps", // x axis label
-        "TravelTime", // y axis label
+        "Travel time", // y axis label
         dataset, // data
         PlotOrientation.VERTICAL, true, // include legend
         true, // tooltips
         false // urls
         );
+    // chartTT.getLegend().setItemFont(new Font("Arial", Font.PLAIN, 10));
+
     XYPlot plotTT = (XYPlot) chartTT.getPlot();
     ValueAxis yAxis = plotTT.getRangeAxis();
-    yAxis.setRange(4, 7);
+    yAxis.setRange(4.75, 6.75);
 
+    // set the stroke for each series...
+    /*
+     * plotTT.getRenderer().setSeriesStroke(
+     * 0,
+     * new BasicStroke(
+     * 2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+     * 1.0f, new float[] {10.0f, 6.0f}, 0.0f
+     * )
+     * );
+     */
+    plotTT.getRenderer().setSeriesStroke(
+        1,
+        new BasicStroke(
+            1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+            1.0f, new float[] { 4.0f, 6.0f }, 0.0f
+        )
+        );
+    plotTT.getRenderer().setSeriesStroke(
+        2,
+        new BasicStroke(
+            1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND,
+            1.0f, new float[] { 2.0f, 4.0f }, 0.0f
+        )
+        );
+    plotTT.getRenderer().setSeriesPaint(2, ChartColor.VERY_DARK_GREEN);
     Plots.plotLineChartFromCollection(dataset, null, "Time steps",
-        "Travel Time");
+        "Travel time");
 
     plotTT.setBackgroundPaint(Color.white);
     plotTT.setDomainGridlinePaint(Color.lightGray);
@@ -209,24 +246,29 @@ public class DTASolver {
     plotSR.setRangeGridlinePaint(Color.lightGray);
     InputOutput.writeChartAsPDF("SplitRatios.pdf", chartSR, 300, 432);
     /* We combine the two plots into one */
-    CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis(
-        "Time Steps"));
+    NumberAxis range = new NumberAxis("Time Steps");
+
+    CombinedDomainXYPlot plot = new CombinedDomainXYPlot(range);
     plot.setGap(10.0);
-    plot.setBackgroundPaint(Color.white);
+
     // plot.setRenderer(plotTT.getRenderer());
     plot.setFixedLegendItems(plotTT.getLegendItems());
-    plot.add(plotTT, 1);
-    plot.add(plotSR, 1);
+    plot.add(plotTT, 7);
+    plot.add(plotSR, 3);
     plot.setOrientation(PlotOrientation.VERTICAL);
-
+    plot.setBackgroundPaint(Color.white);
+    plot.setGap(1);
     JFreeChart chart = new JFreeChart(
-        "CombinedDomainXYPlot Demo",
+        null,
         JFreeChart.DEFAULT_TITLE_FONT, plot, true);
+    chart.setBackgroundPaint(Color.white);
     ChartPanel chartPanel = new ChartPanel(chart);
     chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
 
     /* We take the legend from the first plot only */
     // chart.addSubtitle(new LegendTitle((XYPlot)(plot.getSubplots().get(0))));
+
+    InputOutput.writeChartAsPDF("Both.pdf", chart, 500, 300);
 
     GUI g = new GUI();
     g.setContentPane(chartPanel);

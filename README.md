@@ -9,6 +9,8 @@ This implementation computes a User Equilibrium for Dynamic Traffic Assignement
 (also called Nash Equilibrium or Wardrop equilibrium) for the case of N parallel
 links.
 
+To run it, you just need to add the lib/*.jar into the build path.
+
 Don't forget to enable assertions (-ea parameter on the JVM), it is used to
 detect anormal behaviors.
 
